@@ -1,0 +1,1353 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Universal TADC System - Mission Maker's Guide</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            background-color: #f5f5f5;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background-color: white;
+            padding: 40px;
+            box-shadow: 0 0 20px rgba(0,0,0,0.1);
+            border-radius: 8px;
+        }
+        
+        h1 {
+            color: #2c3e50;
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            border-bottom: 4px solid #3498db;
+            padding-bottom: 15px;
+        }
+        
+        h2 {
+            color: #2c3e50;
+            font-size: 1.8em;
+            margin-top: 40px;
+            margin-bottom: 20px;
+            padding-left: 10px;
+            border-left: 5px solid #3498db;
+        }
+        
+        h3 {
+            color: #34495e;
+            font-size: 1.4em;
+            margin-top: 30px;
+            margin-bottom: 15px;
+        }
+        
+        h4 {
+            color: #34495e;
+            font-size: 1.2em;
+            margin-top: 20px;
+            margin-bottom: 10px;
+        }
+        
+        p {
+            margin-bottom: 15px;
+            text-align: justify;
+        }
+        
+        .subtitle {
+            color: #7f8c8d;
+            font-size: 1.3em;
+            margin-bottom: 30px;
+        }
+        
+        ul, ol {
+            margin-left: 30px;
+            margin-bottom: 20px;
+        }
+        
+        li {
+            margin-bottom: 8px;
+        }
+        
+        .toc {
+            background-color: #ecf0f1;
+            padding: 20px;
+            border-radius: 5px;
+            margin-bottom: 30px;
+        }
+        
+        .toc h2 {
+            margin-top: 0;
+            border-left: none;
+            padding-left: 0;
+        }
+        
+        .toc ul {
+            list-style-type: none;
+            margin-left: 0;
+        }
+        
+        .toc li {
+            margin-bottom: 5px;
+        }
+        
+        .toc a {
+            color: #2980b9;
+            text-decoration: none;
+        }
+        
+        .toc a:hover {
+            color: #3498db;
+            text-decoration: underline;
+        }
+        
+        code {
+            background-color: #f4f4f4;
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9em;
+            color: #e74c3c;
+        }
+        
+        pre {
+            background-color: #2c3e50;
+            color: #ecf0f1;
+            padding: 20px;
+            border-radius: 5px;
+            overflow-x: auto;
+            margin-bottom: 20px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9em;
+            line-height: 1.4;
+        }
+        
+        pre code {
+            background-color: transparent;
+            padding: 0;
+            color: #ecf0f1;
+        }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+        
+        th {
+            background-color: #3498db;
+            color: white;
+            padding: 12px;
+            text-align: left;
+            font-weight: bold;
+        }
+        
+        td {
+            padding: 12px;
+            border-bottom: 1px solid #ddd;
+        }
+        
+        tr:hover {
+            background-color: #f5f5f5;
+        }
+        
+        .checkmark {
+            color: #27ae60;
+            font-weight: bold;
+        }
+        
+        .warning {
+            background-color: #fff3cd;
+            border-left: 4px solid #ffc107;
+            padding: 15px;
+            margin-bottom: 20px;
+            border-radius: 5px;
+        }
+        
+        .info {
+            background-color: #d1ecf1;
+            border-left: 4px solid #17a2b8;
+            padding: 15px;
+            margin-bottom: 20px;
+            border-radius: 5px;
+        }
+        
+        .success {
+            background-color: #d4edda;
+            border-left: 4px solid #28a745;
+            padding: 15px;
+            margin-bottom: 20px;
+            border-radius: 5px;
+        }
+        
+        .error {
+            background-color: #f8d7da;
+            border-left: 4px solid #dc3545;
+            padding: 15px;
+            margin-bottom: 20px;
+            border-radius: 5px;
+        }
+        
+        .feature-list {
+            list-style-type: none;
+            margin-left: 0;
+        }
+        
+        .feature-list li:before {
+            content: "✅ ";
+            margin-right: 8px;
+        }
+        
+        .crossmark-list {
+            list-style-type: none;
+            margin-left: 0;
+        }
+        
+        .crossmark-list li:before {
+            content: "❌ ";
+            margin-right: 8px;
+            color: #e74c3c;
+        }
+        
+        .step-number {
+            display: inline-block;
+            background-color: #3498db;
+            color: white;
+            width: 30px;
+            height: 30px;
+            line-height: 30px;
+            text-align: center;
+            border-radius: 50%;
+            margin-right: 10px;
+            font-weight: bold;
+        }
+        
+        .footer {
+            margin-top: 50px;
+            padding-top: 20px;
+            border-top: 2px solid #ecf0f1;
+            text-align: center;
+            color: #7f8c8d;
+            font-size: 0.9em;
+        }
+        
+        @media print {
+            body {
+                background-color: white;
+                padding: 0;
+            }
+            
+            .container {
+                box-shadow: none;
+                padding: 20px;
+            }
+            
+            pre {
+                page-break-inside: avoid;
+            }
+        }
+        
+        @media (max-width: 768px) {
+            .container {
+                padding: 20px;
+            }
+            
+            h1 {
+                font-size: 2em;
+            }
+            
+            h2 {
+                font-size: 1.5em;
+            }
+            
+            table {
+                font-size: 0.9em;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Universal TADC System - Mission Maker's Guide</h1>
+        <p class="subtitle">Tactical Air Defense Controller with Automated Logistics</p>
+        
+        <div class="toc">
+            <h2>📋 Table of Contents</h2>
+            <ul>
+                <li><a href="#what-is-tadc">1. What is TADC?</a></li>
+                <li><a href="#system-overview">2. System Overview</a></li>
+                <li><a href="#quick-start">3. Quick Start Guide</a></li>
+                <li><a href="#detailed-config">4. Detailed Configuration</a></li>
+                <li><a href="#zone-defense">5. Zone-Based Defense Setup</a></li>
+                <li><a href="#cargo-system">6. Cargo Replenishment System</a></li>
+                <li><a href="#troubleshooting">7. Testing & Troubleshooting</a></li>
+                <li><a href="#advanced">8. Advanced Features</a></li>
+                <li><a href="#scenarios">9. Common Scenarios</a></li>
+            </ul>
+        </div>
+        
+        <h2 id="what-is-tadc">What is TADC?</h2>
+        
+        <p><strong>TADC (Tactical Air Defense Controller)</strong> is an automated air defense system for DCS missions that creates realistic, dynamic fighter aircraft responses to airborne threats. Think of it as an AI commander that:</p>
+        
+        <ul>
+            <li><strong>Detects enemy aircraft</strong> automatically</li>
+            <li><strong>Launches fighters</strong> to intercept threats</li>
+            <li><strong>Manages squadron resources</strong> (aircraft availability, cooldowns)</li>
+            <li><strong>Replenishes squadrons</strong> through cargo aircraft deliveries</li>
+            <li><strong>Operates independently</strong> for both RED and BLUE coalitions</li>
+        </ul>
+        
+        <h3>Why Use TADC?</h3>
+        
+        <ul class="feature-list">
+            <li><strong>Realistic Air Defense</strong> - Squadrons respond intelligently to threats</li>
+            <li><strong>Dynamic Gameplay</strong> - Air battles happen organically without manual triggers</li>
+            <li><strong>Balanced Competition</strong> - Both sides operate with equal capabilities</li>
+            <li><strong>Sustainable Operations</strong> - Cargo system allows long missions with resupply</li>
+            <li><strong>Easy Configuration</strong> - Simple tables instead of complex scripting</li>
+        </ul>
+        
+        <h2 id="system-overview">System Overview</h2>
+        
+        <p>The TADC system consists of <strong>three main scripts</strong> that work together:</p>
+        
+        <h3>1. Squadron Configuration (<code>Moose_TADC_SquadronConfigs_Load1st.lua</code>)</h3>
+        <p><strong>Purpose:</strong> Define all fighter squadrons for RED and BLUE coalitions<br>
+        <strong>Contains:</strong> Aircraft templates, airbases, patrol parameters, zone assignments<br>
+        <strong>Load Order:</strong> <strong>FIRST</strong> (must load before main TADC script)</p>
+        
+        <h3>2. Main TADC System (<code>Moose_TADC_Load2nd.lua</code>)</h3>
+        <p><strong>Purpose:</strong> Core threat detection and interceptor management<br>
+        <strong>Contains:</strong> Threat scanning, squadron selection, intercept logic, F10 menus<br>
+        <strong>Load Order:</strong> <strong>SECOND</strong> (after squadron config)</p>
+        
+        <h3>3. Cargo Dispatcher (<code>Moose_TADC_CargoDispatcher.lua</code>)</h3>
+        <p><strong>Purpose:</strong> Automated squadron resupply through cargo aircraft<br>
+        <strong>Contains:</strong> Squadron monitoring, cargo spawning, delivery tracking<br>
+        <strong>Load Order:</strong> <strong>THIRD</strong> (optional, only if using resupply system)</p>
+        
+        <h2 id="quick-start">Quick Start Guide</h2>
+        
+        <h3>Prerequisites</h3>
+        
+        <p>Before setting up TADC, you need:</p>
+        
+        <ul class="feature-list">
+            <li><strong>MOOSE Framework</strong> loaded in your mission (download from <a href="https://github.com/FlightControl-Master/MOOSE" target="_blank">MOOSE GitHub</a>)</li>
+            <li><strong>Fighter aircraft templates</strong> created in DCS mission editor (as GROUPS, not units)</li>
+            <li><strong>Airbases</strong> under correct coalition control</li>
+            <li>(Optional) <strong>Cargo aircraft templates</strong> for resupply missions</li>
+        </ul>
+        
+        <h3>5-Minute Setup</h3>
+        
+        <h4><span class="step-number">1</span> Create Fighter Templates</h4>
+        
+        <ol>
+            <li>Open your mission in DCS Mission Editor</li>
+            <li>Place fighter aircraft as <strong>LATE ACTIVATION GROUPS</strong> (not individual units)</li>
+            <li>Name them clearly (example: <code>RED_CAP_Kilpyavr_MiG29</code>)</li>
+            <li>Position them at or near the airbases they'll operate from</li>
+            <li>Set them to the correct coalition (RED or BLUE)</li>
+        </ol>
+        
+        <div class="warning">
+            <strong>Important:</strong> Use GROUP templates, not UNIT templates!
+        </div>
+        
+        <h4><span class="step-number">2</span> Load MOOSE Framework</h4>
+        
+        <ol>
+            <li>In mission editor, go to <strong>Triggers</strong></li>
+            <li>Create a new trigger: <strong>MISSION START</strong></li>
+            <li>Add action: <strong>DO SCRIPT FILE</strong></li>
+            <li>Select your MOOSE.lua file</li>
+            <li>This must be the FIRST script loaded</li>
+        </ol>
+        
+        <h4><span class="step-number">3</span> Load Squadron Configuration</h4>
+        
+        <ol>
+            <li>Create another <strong>DO SCRIPT FILE</strong> action (after MOOSE)</li>
+            <li>Select <code>Moose_TADC_SquadronConfigs_Load1st.lua</code></li>
+            <li>Edit the file to configure your squadrons (see below)</li>
+        </ol>
+        
+        <h4><span class="step-number">4</span> Load Main TADC System</h4>
+        
+        <ol>
+            <li>Create another <strong>DO SCRIPT FILE</strong> action</li>
+            <li>Select <code>Moose_TADC_Load2nd.lua</code></li>
+            <li>(Optional) Adjust settings in the file if needed</li>
+        </ol>
+        
+        <h4><span class="step-number">5</span> (Optional) Load Cargo Dispatcher</h4>
+        
+        <ol>
+            <li>If using resupply system, create another <strong>DO SCRIPT FILE</strong> action</li>
+            <li>Select <code>Moose_TADC_CargoDispatcher.lua</code></li>
+        </ol>
+        
+        <div class="info">
+            <strong>Load Order in Mission Editor:</strong>
+            <pre><code>1. MOOSE.lua
+2. Moose_TADC_SquadronConfigs_Load1st.lua
+3. Moose_TADC_Load2nd.lua
+4. Moose_TADC_CargoDispatcher.lua (optional)</code></pre>
+        </div>
+        
+        <h2 id="detailed-config">Detailed Configuration</h2>
+        
+        <h3>Squadron Configuration Explained</h3>
+        
+        <p>Open <code>Moose_TADC_SquadronConfigs_Load1st.lua</code> and find the squadron configuration sections.</p>
+        
+        <h4>Basic Squadron Example</h4>
+        
+        <pre><code>{
+    templateName = "RED_CAP_Kilpyavr_MiG29",     -- Must match mission editor template name
+    displayName = "Kilpyavr CAP MiG-29A",        -- Human-readable name for logs/messages
+    airbaseName = "Kilpyavr",                    -- Exact airbase name from DCS
+    aircraft = 12,                                -- Maximum aircraft in squadron
+    skill = AI.Skill.EXCELLENT,                   -- AI pilot skill level
+    altitude = 20000,                             -- Patrol altitude (feet)
+    speed = 350,                                  -- Patrol speed (knots)
+    patrolTime = 30,                              -- Time on station (minutes)
+    type = "FIGHTER"                              -- Aircraft role
+}</code></pre>
+        
+        <h4>Parameter Guide</h4>
+        
+        <table>
+            <thead>
+                <tr>
+                    <th>Parameter</th>
+                    <th>Description</th>
+                    <th>Example Values</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td><strong>templateName</strong></td>
+                    <td>Group name from mission editor (EXACT match)</td>
+                    <td><code>"RED_CAP_Base_F15"</code></td>
+                </tr>
+                <tr>
+                    <td><strong>displayName</strong></td>
+                    <td>Friendly name shown in messages</td>
+                    <td><code>"Kilpyavr CAP Squadron"</code></td>
+                </tr>
+                <tr>
+                    <td><strong>airbaseName</strong></td>
+                    <td>DCS airbase name (case sensitive)</td>
+                    <td><code>"Kilpyavr"</code>, <code>"Nellis AFB"</code></td>
+                </tr>
+                <tr>
+                    <td><strong>aircraft</strong></td>
+                    <td>Max squadron size</td>
+                    <td><code>8</code>, <code>12</code>, <code>16</code></td>
+                </tr>
+                <tr>
+                    <td><strong>skill</strong></td>
+                    <td>AI difficulty</td>
+                    <td><code>AI.Skill.AVERAGE</code>, <code>GOOD</code>, <code>HIGH</code>, <code>EXCELLENT</code>, <code>ACE</code></td>
+                </tr>
+                <tr>
+                    <td><strong>altitude</strong></td>
+                    <td>CAP patrol altitude</td>
+                    <td><code>15000</code> (feet)</td>
+                </tr>
+                <tr>
+                    <td><strong>speed</strong></td>
+                    <td>CAP patrol speed</td>
+                    <td><code>300</code> (knots)</td>
+                </tr>
+                <tr>
+                    <td><strong>patrolTime</strong></td>
+                    <td>Minutes on station before RTB</td>
+                    <td><code>20</code>, <code>30</code>, <code>40</code></td>
+                </tr>
+                <tr>
+                    <td><strong>type</strong></td>
+                    <td>Aircraft role</td>
+                    <td><code>"FIGHTER"</code></td>
+                </tr>
+            </tbody>
+        </table>
+        
+        <h3>Finding Airbase Names</h3>
+        
+        <h4>Method 1: Mission Editor</h4>
+        <ol>
+            <li>Open mission editor</li>
+            <li>Click on any airbase</li>
+            <li>The exact name appears in the properties panel</li>
+            <li>Copy this name EXACTLY (case sensitive!)</li>
+        </ol>
+        
+        <h4>Method 2: Common Airbases</h4>
+        
+        <p><strong>Kola Peninsula (Example Map):</strong></p>
+        <ul>
+            <li>RED: <code>"Kilpyavr"</code>, <code>"Severomorsk-1"</code>, <code>"Severomorsk-3"</code>, <code>"Murmansk International"</code></li>
+            <li>BLUE: <code>"Luostari Pechenga"</code>, <code>"Ivalo"</code>, <code>"Alakurtti"</code></li>
+        </ul>
+        
+        <p><strong>Nevada:</strong></p>
+        <ul>
+            <li><code>"Nellis AFB"</code>, <code>"McCarran International"</code>, <code>"Creech AFB"</code>, <code>"Tonopah Test Range"</code></li>
+        </ul>
+        
+        <p><strong>Caucasus:</strong></p>
+        <ul>
+            <li><code>"Batumi"</code>, <code>"Gudauta"</code>, <code>"Senaki-Kolkhi"</code>, <code>"Kobuleti"</code>, <code>"Kutaisi"</code></li>
+        </ul>
+        
+        <h3>Adding Multiple Squadrons</h3>
+        
+        <p>You can add as many squadrons as you want. Just copy the squadron block and modify the values:</p>
+        
+        <pre><code>RED_SQUADRON_CONFIG = {
+    -- First Squadron
+    {
+        templateName = "RED_CAP_Base1_MiG29",
+        displayName = "Base 1 CAP",
+        airbaseName = "Kilpyavr",
+        aircraft = 12,
+        skill = AI.Skill.EXCELLENT,
+        altitude = 20000,
+        speed = 350,
+        patrolTime = 30,
+        type = "FIGHTER"
+    },
+    
+    -- Second Squadron (different base)
+    {
+        templateName = "RED_CAP_Base2_SU27",
+        displayName = "Base 2 CAP",
+        airbaseName = "Severomorsk-1",
+        aircraft = 16,
+        skill = AI.Skill.ACE,
+        altitude = 25000,
+        speed = 380,
+        patrolTime = 25,
+        type = "FIGHTER"
+    },
+    
+    -- Add more squadrons here...
+}</code></pre>
+        
+        <div class="info">
+            <strong>Repeat the same process for BLUE squadrons</strong> in the <code>BLUE_SQUADRON_CONFIG</code> section.
+        </div>
+        
+        <h2 id="zone-defense">Zone-Based Defense Setup</h2>
+        
+        <p>Zones allow squadrons to have specific areas of responsibility, creating realistic layered defense.</p>
+        
+        <h3>Why Use Zones?</h3>
+        
+        <ul>
+            <li><strong>Border Defense:</strong> Squadrons patrol specific sectors</li>
+            <li><strong>Layered Defense:</strong> Multiple squadrons cover overlapping areas</li>
+            <li><strong>Priority Response:</strong> Squadrons respond differently based on threat location</li>
+            <li><strong>Realistic Behavior:</strong> Fighters don't fly across the entire map for minor threats</li>
+        </ul>
+        
+        <h3>Zone Types</h3>
+        
+        <p>Each squadron can have up to 3 zone types:</p>
+        
+        <ol>
+            <li><strong>Primary Zone</strong> - Main area of responsibility (full response)</li>
+            <li><strong>Secondary Zone</strong> - Support area (reduced response, 60% by default)</li>
+            <li><strong>Tertiary Zone</strong> - Emergency fallback (enhanced response when squadron weakened)</li>
+        </ol>
+        
+        <h3>Creating Zones in Mission Editor</h3>
+        
+        <h4>Method: Helicopter Waypoint Method</h4>
+        
+        <ol>
+            <li>Place a <strong>helicopter group</strong> (late activation, any type)</li>
+            <li>Name it clearly (example: <code>"RED BORDER"</code>)</li>
+            <li>Add waypoints that outline your zone boundary</li>
+            <li>The script will automatically create a polygon zone from these waypoints</li>
+            <li>Repeat for each zone you want to create</li>
+        </ol>
+        
+        <div class="info">
+            <strong>Example Zone Setup:</strong>
+            <pre><code>Mission Editor:
+- Helicopter Group: "RED BORDER" with waypoints forming a polygon
+- Helicopter Group: "BLUE BORDER" with waypoints forming a polygon
+- Helicopter Group: "CONTESTED ZONE" with waypoints forming a polygon</code></pre>
+        </div>
+        
+        <h3>Configuring Zone Response</h3>
+        
+        <p>Add zone configuration to your squadron:</p>
+        
+        <pre><code>{
+    templateName = "RED_CAP_Kilpyavr_MiG29",
+    displayName = "Kilpyavr CAP",
+    airbaseName = "Kilpyavr",
+    aircraft = 12,
+    skill = AI.Skill.EXCELLENT,
+    altitude = 20000,
+    speed = 350,
+    patrolTime = 30,
+    type = "FIGHTER",
+    
+    -- Zone Configuration
+    primaryZone = "RED BORDER",                    -- Main responsibility area
+    secondaryZone = "CONTESTED ZONE",              -- Backup coverage
+    tertiaryZone = nil,                            -- No tertiary zone
+    
+    -- Optional: Customize zone behavior
+    zoneConfig = {
+        primaryResponse = 1.0,                     -- Full response in primary zone
+        secondaryResponse = 0.6,                   -- 60% response in secondary
+        tertiaryResponse = 1.4,                    -- 140% response in tertiary
+        enableFallback = false,                    -- Don't auto-switch to tertiary
+        fallbackThreshold = 0.3,                   -- Switch when &lt;30% aircraft remain
+        secondaryLowPriorityFilter = true,         -- Ignore small threats in secondary
+        secondaryLowPriorityThreshold = 2          -- "Small threat" = 2 or fewer aircraft
+    }
+}</code></pre>
+        
+        <h3>Zone Behavior Examples</h3>
+        
+        <h4>Example 1: Border Defense Squadron</h4>
+        <pre><code>primaryZone = "RED BORDER",          -- Patrols the border
+secondaryZone = "INTERIOR",          -- Helps with interior threats if needed
+tertiaryZone = nil                   -- No fallback</code></pre>
+        
+        <h4>Example 2: Base Defense with Fallback</h4>
+        <pre><code>primaryZone = "NORTHERN SECTOR",     -- Main patrol area
+secondaryZone = nil,                 -- No secondary
+tertiaryZone = "BASE PERIMETER",     -- Falls back to defend base when weakened
+enableFallback = true,               -- Auto-switch to tertiary when low
+fallbackThreshold = 0.4              -- Switch at 40% strength</code></pre>
+        
+        <h4>Example 3: Layered Defense</h4>
+        <pre><code>-- Squadron A: Outer layer
+primaryZone = "OUTER PERIMETER"
+
+-- Squadron B: Middle layer
+primaryZone = "MIDDLE PERIMETER"
+
+-- Squadron C: Inner/base defense
+primaryZone = "BASE DEFENSE"</code></pre>
+        
+        <h3>Global Response (No Zones)</h3>
+        
+        <p>If you <strong>DON'T</strong> want zone restrictions, simply leave all zones as <code>nil</code>:</p>
+        
+        <pre><code>{
+    templateName = "RED_CAP_Base_MiG29",
+    displayName = "Global Response CAP",
+    airbaseName = "Kilpyavr",
+    aircraft = 12,
+    skill = AI.Skill.EXCELLENT,
+    altitude = 20000,
+    speed = 350,
+    patrolTime = 30,
+    type = "FIGHTER",
+    
+    -- No zones = responds to threats anywhere on the map
+    primaryZone = nil,
+    secondaryZone = nil,
+    tertiaryZone = nil
+}</code></pre>
+        
+        <h2 id="cargo-system">Cargo Replenishment System</h2>
+        
+        <p>The cargo system automatically replenishes squadrons by spawning transport aircraft that fly supplies to airbases.</p>
+        
+        <h3>How Cargo Works</h3>
+        
+        <ol>
+            <li><strong>Monitoring:</strong> Script checks squadron aircraft counts every minute</li>
+            <li><strong>Detection:</strong> When squadron drops below threshold (90% by default), cargo is dispatched</li>
+            <li><strong>Spawning:</strong> Transport aircraft spawns at a supply airfield</li>
+            <li><strong>Delivery:</strong> Flies to destination airbase and lands</li>
+            <li><strong>Replenishment:</strong> Squadron aircraft count increases upon delivery</li>
+            <li><strong>Cooldown:</strong> 5-minute cooldown before next delivery to same base</li>
+        </ol>
+        
+        <h3>Cargo Aircraft Detection</h3>
+        
+        <p>The system detects cargo by aircraft name patterns:</p>
+        <ul>
+            <li><code>CARGO</code></li>
+            <li><code>TRANSPORT</code></li>
+            <li><code>C130</code> or <code>C-130</code></li>
+            <li><code>AN26</code> or <code>AN-26</code></li>
+        </ul>
+        
+        <p><strong>Delivery Methods:</strong></p>
+        <ul>
+            <li><strong>Landing:</strong> Aircraft lands at destination airbase</li>
+        </ul>
+        
+        <h3>Configuring Cargo Templates</h3>
+        
+        <p>Edit <code>Moose_TADC_CargoDispatcher.lua</code> and find <code>CARGO_SUPPLY_CONFIG</code>:</p>
+        
+        <pre><code>local CARGO_SUPPLY_CONFIG = {
+    red = {
+        cargoTemplate = "CARGO_RED_AN26_TEMPLATE",         -- Template name from mission editor
+        supplyAirfields = {"Airbase1", "Airbase2"},        -- List of supply bases
+        replenishAmount = 4,                               -- Aircraft added per delivery
+        threshold = 0.90                                   -- Trigger at 90% capacity
+    },
+    blue = {
+        cargoTemplate = "CARGO_BLUE_C130_TEMPLATE",
+        supplyAirfields = {"Airbase3", "Airbase4"},
+        replenishAmount = 4,
+        threshold = 0.90
+    }
+}</code></pre>
+        
+        <h3>Creating Cargo Templates</h3>
+        
+        <h4>1. In Mission Editor:</h4>
+        <ul>
+            <li>Place transport aircraft group (C-130, An-26, etc.)</li>
+            <li>Name it: <code>CARGO_RED_AN26_TEMPLATE</code> or <code>CARGO_BLUE_C130_TEMPLATE</code></li>
+            <li>Set <strong>LATE ACTIVATION</strong></li>
+            <li>Position at any friendly airbase (starting position doesn't matter)</li>
+        </ul>
+        
+        <h4>2. In Configuration:</h4>
+        <ul>
+            <li>Use the EXACT template name in <code>cargoTemplate</code> field</li>
+            <li>List supply airbases in <code>supplyAirfields</code> array</li>
+            <li>Set how many aircraft each delivery adds (<code>replenishAmount</code>)</li>
+        </ul>
+        
+        <h3>Supply Airfield Strategy</h3>
+        
+        <p><strong>Choose rear/safe airbases for supplies:</strong></p>
+        
+        <pre><code>red = {
+    cargoTemplate = "CARGO_RED_AN26_TEMPLATE",
+    supplyAirfields = {
+        "Rear_Base_1",              -- Far from frontline, safe
+        "Rear_Base_2",              -- Alternate supply source
+        "Central_Logistics_Hub"     -- Main supply depot
+    },
+    replenishAmount = 4,
+    threshold = 0.90
+}</code></pre>
+        
+        <p><strong>Tips:</strong></p>
+        <ul>
+            <li>Use 3-5 supply airbases for redundancy</li>
+            <li>Choose bases far from combat zones</li>
+            <li>Ensure supply bases are well-defended</li>
+            <li>Balance geographic coverage</li>
+        </ul>
+        
+        <h3>Disabling Cargo System</h3>
+        
+        <p>If you don't want automated resupply:</p>
+        <ol>
+            <li><strong>Don't load</strong> <code>Moose_TADC_CargoDispatcher.lua</code></li>
+            <li>Squadrons will operate with their initial aircraft count only</li>
+            <li>System still works perfectly for shorter missions</li>
+        </ol>
+        
+        <h2 id="troubleshooting">Testing & Troubleshooting</h2>
+        
+        <h3>Validation Tools</h3>
+        
+        <p>The system includes built-in validation. Check the DCS log file after mission start for:</p>
+        
+        <div class="success">
+            <pre><code>[Universal TADC] ═══════════════════════════════════════
+[Universal TADC] Configuration Validation Results:
+[Universal TADC] ✓ All templates exist
+[Universal TADC] ✓ All airbases valid
+[Universal TADC] ✓ All zones found
+[Universal TADC] Configuration is VALID
+[Universal TADC] ═══════════════════════════════════════</code></pre>
+        </div>
+        
+        <h3>In-Game F10 Menu Commands</h3>
+        
+        <p>Press <strong>F10</strong> in-game to access TADC utilities:</p>
+        
+        <h4>Available to Each Coalition:</h4>
+        <ul>
+            <li><strong>Show Squadron Resource Summary</strong> - Current aircraft counts</li>
+            <li><strong>Show Airbase Status Report</strong> - Operational status of all bases</li>
+            <li><strong>Show Active Interceptors</strong> - Currently airborne fighters</li>
+            <li><strong>Show Threat Summary</strong> - Detected enemy aircraft</li>
+            <li><strong>Broadcast Squadron Summary Now</strong> - Force immediate status update</li>
+            <li><strong>Show Cargo Delivery Log</strong> - Recent supply missions</li>
+            <li><strong>Show Zone Coverage Map</strong> - Squadron zone assignments</li>
+        </ul>
+        
+        <h4>Available to All (Mission Commands):</h4>
+        <ul>
+            <li><strong>Emergency Cleanup Interceptors</strong> - Remove stuck/dead groups</li>
+            <li><strong>Show TADC System Status</strong> - Uptime and system health</li>
+            <li><strong>Check for Stuck Aircraft</strong> - Manual stuck aircraft check</li>
+            <li><strong>Show Airbase Health Status</strong> - Parking/spawn issues</li>
+        </ul>
+        
+        <h3>Common Issues & Solutions</h3>
+        
+        <h4>Issue: "Template not found in mission"</h4>
+        <div class="error">
+            <p><strong>Cause:</strong> Template name in config doesn't match mission editor</p>
+            <p><strong>Solution:</strong></p>
+            <ol>
+                <li>Check exact spelling and case</li>
+                <li>Ensure template is in mission editor</li>
+                <li>Verify template is a GROUP (not a unit)</li>
+                <li>Check template name in mission editor properties</li>
+            </ol>
+        </div>
+        
+        <h4>Issue: "Airbase not found or wrong coalition"</h4>
+        <div class="error">
+            <p><strong>Cause:</strong> Airbase name wrong or captured by enemy</p>
+            <p><strong>Solution:</strong></p>
+            <ol>
+                <li>Check exact airbase spelling (case sensitive)</li>
+                <li>Verify airbase is owned by correct coalition in mission editor</li>
+                <li>Use <code>_G.TDAC_CheckAirbase("AirbaseName")</code> in DCS console</li>
+            </ol>
+        </div>
+        
+        <h4>Issue: "No interceptors launching"</h4>
+        <div class="warning">
+            <p><strong>Check:</strong></p>
+            <ol>
+                <li>Are enemy aircraft detected? (F10 → Show Threat Summary)</li>
+                <li>Are squadrons operational? (F10 → Show Squadron Resource Summary)</li>
+                <li>Is airbase captured/destroyed? (F10 → Show Airbase Status Report)</li>
+                <li>Are squadrons on cooldown? (F10 → Show Squadron Resource Summary)</li>
+                <li>Check intercept ratio settings (might be too low)</li>
+            </ol>
+        </div>
+        
+        <h4>Issue: "Cargo not delivering"</h4>
+        <div class="warning">
+            <p><strong>Check:</strong></p>
+            <ol>
+                <li>Is cargo template name correct?</li>
+                <li>Are supply airbases valid and friendly?</li>
+                <li>Is destination airbase captured/operational?</li>
+                <li>Check parking availability (F10 → Show Airbase Health Status)</li>
+                <li>Look for "Cargo delivery detected" messages in log</li>
+            </ol>
+        </div>
+        
+        <h4>Issue: "Aircraft spawning stuck at parking"</h4>
+        <div class="warning">
+            <p><strong>Cause:</strong> Parking spots occupied or insufficient space</p>
+            <p><strong>Solution:</strong></p>
+            <ol>
+                <li>Use F10 → Check for Stuck Aircraft</li>
+                <li>Use F10 → Emergency Cleanup Interceptors</li>
+                <li>Check airbase parking capacity (larger aircraft need more space)</li>
+                <li>Reduce squadron sizes if parking is limited</li>
+            </ol>
+        </div>
+        
+        <h3>DCS Console Diagnostics</h3>
+        
+        <p>Open DCS Lua console (<strong>F12</strong> or scripting console) and run:</p>
+        
+        <pre><code>-- Check all supply airbase ownership
+_G.TDAC_CheckAirbaseOwnership()
+
+-- Check specific airbase
+_G.TDAC_CheckAirbase("Kilpyavr")
+
+-- Validate dispatcher configuration
+_G.TDAC_RunConfigCheck()
+
+-- Check airbase parking availability
+_G.TDAC_LogAirbaseParking("Kilpyavr")
+
+-- Test cargo spawn (debugging)
+_G.TDAC_CargoDispatcher_TestSpawn("CARGO_RED_AN26_TEMPLATE", "SupplyBase", "DestinationBase")</code></pre>
+        
+        <h2 id="advanced">Advanced Features</h2>
+        
+        <h3>Intercept Ratio System</h3>
+        
+        <p>The <code>interceptRatio</code> setting controls how many fighters launch per enemy aircraft.</p>
+        
+        <p><strong>In <code>Moose_TADC_Load2nd.lua</code>:</strong></p>
+        
+        <pre><code>local TADC_SETTINGS = {
+    red = {
+        interceptRatio = 0.8,          -- RED launches 0.8 fighters per threat
+        maxActiveCAP = 8,              -- Max 8 groups in air simultaneously
+        defaultCooldown = 300,         -- 5-minute cooldown after engagement
+    },
+    blue = {
+        interceptRatio = 1.2,          -- BLUE launches 1.2 fighters per threat
+        maxActiveCAP = 10,             -- Max 10 groups in air simultaneously
+        defaultCooldown = 300,
+    }
+}</code></pre>
+        
+        <h4>Intercept Ratio Chart</h4>
+        
+        <table>
+            <thead>
+                <tr>
+                    <th>Ratio</th>
+                    <th>1 Enemy</th>
+                    <th>4 Enemies</th>
+                    <th>8 Enemies</th>
+                    <th>Effect</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>0.5</td>
+                    <td>1 fighter</td>
+                    <td>2 fighters</td>
+                    <td>4 fighters</td>
+                    <td>Conservative response</td>
+                </tr>
+                <tr>
+                    <td>0.8</td>
+                    <td>1 fighter</td>
+                    <td>4 fighters</td>
+                    <td>7 fighters</td>
+                    <td><strong>Balanced (default)</strong></td>
+                </tr>
+                <tr>
+                    <td>1.0</td>
+                    <td>1 fighter</td>
+                    <td>4 fighters</td>
+                    <td>8 fighters</td>
+                    <td>1:1 parity</td>
+                </tr>
+                <tr>
+                    <td>1.4</td>
+                    <td>2 fighters</td>
+                    <td>6 fighters</td>
+                    <td>12 fighters</td>
+                    <td>Strong response</td>
+                </tr>
+                <tr>
+                    <td>2.0</td>
+                    <td>2 fighters</td>
+                    <td>8 fighters</td>
+                    <td>16 fighters</td>
+                    <td>Overwhelming force</td>
+                </tr>
+            </tbody>
+        </table>
+        
+        <p><strong>Tactical Effects:</strong></p>
+        <ul>
+            <li><strong>Low (0.5-0.8):</strong> Sustainable defense, squadrons last longer</li>
+            <li><strong>Medium (0.8-1.2):</strong> Balanced dogfights, realistic attrition</li>
+            <li><strong>High (1.4-2.0):</strong> Strong defense, rapid squadron depletion</li>
+        </ul>
+        
+        <p><strong>Asymmetric Scenarios:</strong></p>
+        <pre><code>-- RED advantage
+red = { interceptRatio = 1.4 },
+blue = { interceptRatio = 0.8 }
+
+-- BLUE advantage
+red = { interceptRatio = 0.8 },
+blue = { interceptRatio = 1.4 }</code></pre>
+        
+        <h3>Distance-Based Engagement</h3>
+        
+        <p>Control how far squadrons will chase threats:</p>
+        
+        <pre><code>{
+    templateName = "RED_CAP_Base_MiG29",
+    displayName = "Base Defense",
+    airbaseName = "Kilpyavr",
+    aircraft = 12,
+    -- ... other settings ...
+    
+    zoneConfig = {
+        maxEngagementRange = 50000,      -- Won't engage threats &gt;50km from base
+        primaryResponse = 1.0,
+        secondaryResponse = 0.6
+    }
+}</code></pre>
+        
+        <h3>Cooldown System</h3>
+        
+        <p>After launching interceptors, squadrons go on cooldown to prevent spam:</p>
+        
+        <pre><code>local TADC_SETTINGS = {
+    red = {
+        defaultCooldown = 300,           -- 5 minutes between launches
+        -- ... other settings ...
+    }
+}</code></pre>
+        
+        <p><strong>Per-Squadron Cooldown (optional):</strong></p>
+        <pre><code>{
+    templateName = "RED_CAP_Base_MiG29",
+    cooldownOverride = 600,              -- This squadron: 10-minute cooldown
+    -- ... other settings ...
+}</code></pre>
+        
+        <h3>Aircraft Skill Levels</h3>
+        
+        <p>Adjust AI difficulty per squadron:</p>
+        
+        <pre><code>skill = AI.Skill.AVERAGE      -- Easiest, good for training
+skill = AI.Skill.GOOD         -- Below average
+skill = AI.Skill.HIGH         -- Average pilots
+skill = AI.Skill.EXCELLENT    -- Above average (recommended)
+skill = AI.Skill.ACE          -- Hardest, expert pilots</code></pre>
+        
+        <p><strong>Mixed Difficulty Example:</strong></p>
+        <pre><code>RED_SQUADRON_CONFIG = {
+    {
+        displayName = "Elite Squadron",
+        skill = AI.Skill.ACE,             -- Best pilots
+        aircraft = 8,
+        -- ...
+    },
+    {
+        displayName = "Regular Squadron",
+        skill = AI.Skill.GOOD,            -- Average pilots
+        aircraft = 12,
+        -- ...
+    }
+}</code></pre>
+        
+        <h2 id="scenarios">Common Scenarios</h2>
+        
+        <h3>Scenario 1: Simple Border Defense</h3>
+        
+        <p><strong>Goal:</strong> RED defends northern border, BLUE defends southern border</p>
+        
+        <pre><code>-- RED Configuration
+RED_SQUADRON_CONFIG = {
+    {
+        templateName = "RED_CAP_North_MiG29",
+        displayName = "Northern Border CAP",
+        airbaseName = "Northern_Base",
+        aircraft = 12,
+        skill = AI.Skill.EXCELLENT,
+        altitude = 20000,
+        speed = 350,
+        patrolTime = 30,
+        type = "FIGHTER",
+        primaryZone = "RED BORDER"
+    }
+}
+
+-- BLUE Configuration
+BLUE_SQUADRON_CONFIG = {
+    {
+        templateName = "BLUE_CAP_South_F16",
+        displayName = "Southern Border CAP",
+        airbaseName = "Southern_Base",
+        aircraft = 12,
+        skill = AI.Skill.EXCELLENT,
+        altitude = 20000,
+        speed = 350,
+        patrolTime = 30,
+        type = "FIGHTER",
+        primaryZone = "BLUE BORDER"
+    }
+}</code></pre>
+        
+        <div class="info">
+            <strong>In Mission Editor:</strong>
+            <ul>
+                <li>Create zone "RED BORDER" (helicopter waypoints on northern border)</li>
+                <li>Create zone "BLUE BORDER" (helicopter waypoints on southern border)</li>
+            </ul>
+        </div>
+        
+        <h3>Scenario 2: Layered Defense Network</h3>
+        
+        <p><strong>Goal:</strong> Multiple squadrons covering overlapping zones with different priorities</p>
+        
+        <pre><code>RED_SQUADRON_CONFIG = {
+    -- Outer Layer: Long-range interceptors
+    {
+        templateName = "RED_LONG_RANGE_MiG31",
+        displayName = "Long Range Interceptors",
+        airbaseName = "Forward_Base",
+        aircraft = 8,
+        skill = AI.Skill.EXCELLENT,
+        altitude = 35000,
+        speed = 450,
+        patrolTime = 20,
+        type = "FIGHTER",
+        primaryZone = "OUTER PERIMETER"
+    },
+    
+    -- Middle Layer: General defense
+    {
+        templateName = "RED_CAP_MiG29",
+        displayName = "Middle Defense CAP",
+        airbaseName = "Central_Base",
+        aircraft = 12,
+        skill = AI.Skill.EXCELLENT,
+        altitude = 25000,
+        speed = 350,
+        patrolTime = 30,
+        type = "FIGHTER",
+        primaryZone = "MIDDLE PERIMETER",
+        secondaryZone = "OUTER PERIMETER"
+    },
+    
+    -- Inner Layer: Point defense
+    {
+        templateName = "RED_BASE_DEFENSE_SU27",
+        displayName = "Base Defense",
+        airbaseName = "Main_Base",
+        aircraft = 16,
+        skill = AI.Skill.ACE,
+        altitude = 20000,
+        speed = 320,
+        patrolTime = 40,
+        type = "FIGHTER",
+        primaryZone = "BASE PERIMETER",
+        tertiaryZone = "BASE PERIMETER",
+        zoneConfig = {
+            enableFallback = true,
+            fallbackThreshold = 0.3
+        }
+    }
+}</code></pre>
+        
+        <h3>Scenario 3: Sustained Operations with Resupply</h3>
+        
+        <p><strong>Goal:</strong> Long mission with automated squadron replenishment</p>
+        
+        <h4>Squadron Config:</h4>
+        <pre><code>RED_SQUADRON_CONFIG = {
+    {
+        templateName = "RED_CAP_Frontline_MiG29",
+        displayName = "Frontline CAP",
+        airbaseName = "Frontline_Base",
+        aircraft = 12,                    -- Will be resupplied
+        skill = AI.Skill.EXCELLENT,
+        altitude = 20000,
+        speed = 350,
+        patrolTime = 30,
+        type = "FIGHTER",
+        primaryZone = "COMBAT ZONE"
+    }
+}</code></pre>
+        
+        <h4>Cargo Config (in <code>Moose_TADC_CargoDispatcher.lua</code>):</h4>
+        <pre><code>local CARGO_SUPPLY_CONFIG = {
+    red = {
+        cargoTemplate = "CARGO_RED_AN26",
+        supplyAirfields = {
+            "Rear_Base_1",                -- Safe logistics hub
+            "Rear_Base_2",                -- Backup supply source
+            "Central_Depot"               -- Main supply depot
+        },
+        replenishAmount = 4,              -- +4 aircraft per delivery
+        threshold = 0.75                  -- Trigger at 75% (9/12 aircraft)
+    }
+}</code></pre>
+        
+        <h4>Mission Flow:</h4>
+        <ol>
+            <li>Frontline squadron intercepts threats</li>
+            <li>Squadron drops to 9 aircraft (75%)</li>
+            <li>Cargo automatically dispatched from rear base</li>
+            <li>Transport flies to frontline base</li>
+            <li>Cargo delivers, squadron back to 12 aircraft</li>
+            <li>Cycle repeats throughout mission</li>
+        </ol>
+        
+        <h3>Scenario 4: Asymmetric Warfare</h3>
+        
+        <p><strong>Goal:</strong> RED has numerical superiority, BLUE has quality advantage</p>
+        
+        <pre><code>-- RED: More squadrons, lower skill
+local TADC_SETTINGS = {
+    red = {
+        interceptRatio = 0.8,            -- Conservative response
+        maxActiveCAP = 12,               -- More groups allowed
+    }
+}
+
+RED_SQUADRON_CONFIG = {
+    {
+        templateName = "RED_CAP_1",
+        airbaseName = "Base_1",
+        aircraft = 16,                    -- Large squadron
+        skill = AI.Skill.GOOD,            -- Average skill
+        -- ...
+    },
+    {
+        templateName = "RED_CAP_2",
+        airbaseName = "Base_2",
+        aircraft = 16,
+        skill = AI.Skill.GOOD,
+        -- ...
+    },
+    {
+        templateName = "RED_CAP_3",
+        airbaseName = "Base_3",
+        aircraft = 16,
+        skill = AI.Skill.GOOD,
+        -- ...
+    }
+}
+
+-- BLUE: Fewer squadrons, higher skill
+local TADC_SETTINGS = {
+    blue = {
+        interceptRatio = 1.2,            -- Aggressive response
+        maxActiveCAP = 8,                -- Fewer groups
+    }
+}
+
+BLUE_SQUADRON_CONFIG = {
+    {
+        templateName = "BLUE_CAP_1",
+        airbaseName = "Base_1",
+        aircraft = 10,                    -- Smaller squadron
+        skill = AI.Skill.ACE,             -- Elite pilots
+        -- ...
+    },
+    {
+        templateName = "BLUE_CAP_2",
+        airbaseName = "Base_2",
+        aircraft = 10,
+        skill = AI.Skill.ACE,
+        -- ...
+    }
+}</code></pre>
+        
+        <h2>Tips for New Mission Makers</h2>
+        
+        <h3>Start Simple</h3>
+        
+        <ol>
+            <li><strong>First Mission:</strong> Use 1-2 squadrons per side with no zones</li>
+            <li><strong>Second Mission:</strong> Add zone-based defense</li>
+            <li><strong>Third Mission:</strong> Add cargo resupply system</li>
+            <li><strong>Advanced:</strong> Multi-squadron layered defense with fallback</li>
+        </ol>
+        
+        <h3>Realistic Aircraft Numbers</h3>
+        
+        <p><strong>Small Airbase:</strong> 6-8 aircraft per squadron<br>
+        <strong>Medium Airbase:</strong> 10-12 aircraft per squadron<br>
+        <strong>Large Airbase:</strong> 14-18 aircraft per squadron</p>
+        
+        <p><strong>Balance across map:</strong> If RED has 40 total aircraft, BLUE should have similar unless asymmetric</p>
+        
+        <h3>Performance Considerations</h3>
+        
+        <ul>
+            <li><strong>Limit active groups:</strong> Use <code>maxActiveCAP</code> to prevent FPS drops</li>
+            <li><strong>Zone sizes matter:</strong> Smaller zones = less scanning overhead</li>
+            <li><strong>Cargo cooldowns:</strong> Prevent cargo spam with reasonable cooldowns</li>
+            <li><strong>Squadron counts:</strong> 3-5 squadrons per side is a good starting point</li>
+        </ul>
+        
+        <h3>Testing Workflow</h3>
+        
+        <ol>
+            <li><strong>Create minimal setup</strong> (1 squadron each side)</li>
+            <li><strong>Test in mission editor</strong> using "Fly Now"</li>
+            <li><strong>Check F10 menus</strong> for squadron status</li>
+            <li><strong>Spawn enemy aircraft</strong> to test intercepts</li>
+            <li><strong>Review DCS.log</strong> for validation messages</li>
+            <li><strong>Expand gradually</strong> once basic system works</li>
+        </ol>
+        
+        <h3>Common Mistakes to Avoid</h3>
+        
+        <ul class="crossmark-list">
+            <li><strong>Using UNIT templates instead of GROUP templates</strong></li>
+            <li><strong>Misspelling airbase names</strong></li>
+            <li><strong>Loading scripts in wrong order</strong></li>
+            <li><strong>Setting intercept ratio too high</strong></li>
+            <li><strong>Forgetting to load MOOSE first</strong></li>
+        </ul>
+        
+        <ul class="feature-list">
+            <li>Use GROUP templates (late activation groups)</li>
+            <li>Copy exact names from mission editor</li>
+            <li>Squadron Config → Main TADC → Cargo Dispatcher</li>
+            <li>Start with 0.8-1.0, adjust after testing</li>
+            <li>MOOSE must be first script loaded</li>
+        </ul>
+        
+        <h2>Conclusion</h2>
+        
+        <p>The Universal TADC system provides mission makers with powerful, automated air defense capabilities that create dynamic, realistic air combat scenarios. By following this guide, even new mission makers can create sophisticated missions with minimal scripting knowledge.</p>
+        
+        <h3>Key Takeaways</h3>
+        
+        <ul class="feature-list">
+            <li><strong>Three scripts work together:</strong> Squadron Config → Main TADC → Cargo Dispatcher</li>
+            <li><strong>Configuration is simple:</strong> Edit tables, not complex code</li>
+            <li><strong>Both coalitions operate independently:</strong> Balanced or asymmetric scenarios</li>
+            <li><strong>Zones enable tactical behavior:</strong> Realistic area-of-responsibility system</li>
+            <li><strong>Cargo enables sustained operations:</strong> Long missions with automatic resupply</li>
+            <li><strong>Built-in validation:</strong> Checks configuration before mission starts</li>
+            <li><strong>F10 menus provide visibility:</strong> Monitor system status in real-time</li>
+        </ul>
+        
+        <h3>Getting Help</h3>
+        
+        <p>If you encounter issues:</p>
+        
+        <ol>
+            <li>Check DCS.log for validation errors</li>
+            <li>Use F10 menu diagnostics</li>
+            <li>Run console commands for detailed info</li>
+            <li>Review this guide's troubleshooting section</li>
+            <li>Start simple and expand gradually</li>
+        </ol>
+        
+        <h3>Next Steps</h3>
+        
+        <ol>
+            <li>Set up your first squadron (1 RED, 1 BLUE)</li>
+            <li>Test basic intercept behavior</li>
+            <li>Add zones for tactical depth</li>
+            <li>Implement cargo resupply for long missions</li>
+            <li>Experiment with advanced features</li>
+        </ol>
+        
+        <p style="text-align: center; font-size: 1.5em; margin-top: 30px;">Happy mission making! 🚁✈️</p>
+        
+        <div class="footer">
+            <p><strong>Author:</strong> F99th-TracerFacer</p>
+            <p><strong>Document Version:</strong> 1.0</p>
+            <p><strong>Last Updated:</strong> October 2025</p>
+            <p><strong>Compatible with:</strong> MOOSE Framework & DCS World</p>
+        </div>
+    </div>
+</body>
+</html>
