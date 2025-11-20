@@ -55,7 +55,7 @@ end
 ]]
 local CARGO_SUPPLY_CONFIG = {
     red = {
-        supplyAirfields = { "Sochi-Adler", "Gudauta", "Sukhumi-Babushara", "Nalchik", "Beslan", "Maykop-Khanskaya" }, -- replace with your RED supply airbase names
+        supplyAirfields = { "Sochi-Adler", "Nalchik", "Beslan", "Maykop-Khanskaya" }, -- replace with your RED supply airbase names
         cargoTemplate = "CARGO_RED_AN26",    -- replace with your RED cargo aircraft template name
         threshold = 0.90                              -- ratio below which to trigger resupply (testing)
     },
@@ -352,16 +352,7 @@ local function dispatchCargo(squadron, coalitionKey)
     else
         log("DEBUG: AIRBASE object found for '" .. origin .. "'. Proceeding with spawn.", true)
     end
-    -- Select the correct template based on coalition
-    local templateBase, uniqueGroupName
-    if coalitionKey == "blue" then
-        templateBase = CARGO_AIRCRAFT_TEMPLATE_BLUE
-        uniqueGroupName = "CARGO_C130_DYNAMIC_" .. math.random(1000,9999)
-    else
-        templateBase = CARGO_AIRCRAFT_TEMPLATE_RED
-        uniqueGroupName = "CARGO_AN26_DYNAMIC_" .. math.random(1000,9999)
-    end
-    -- Clone the template and set the group/unit name
+
     -- Prepare a mission placeholder. We'll set the group and spawnPos after successful spawn.
     local mission = {
         group = nil,
@@ -448,14 +439,21 @@ local function dispatchCargo(squadron, coalitionKey)
         return
     end
 
-    -- Configure RAT for a single, non-respawning dispatch
+    -- Configure RAT for a single, non-respawning dispatch with immediate spawn
     rat:SetDeparture(origin)
     rat:SetDestination(destination)
     rat:NoRespawn()
-    rat:InitUnControlled(false) -- force departing transports to spawn in a controllable state
-    rat:InitLateActivated(false)
+    
+    -- CRITICAL: Ensure aircraft spawn in active, controllable state
+    rat:InitUnControlled(false)  -- Spawn as controllable AI
+    rat:InitLateActivated(false) -- Do NOT spawn as late activated
+    rat:RadioON()                -- Ensure radio is active (required for AI to be "alive")
+    
+    -- Disable ATC delay system (240 second default queue)
+    rat:ATC_Messages(false)      -- Disable ATC messaging system
+    rat:Commute()                -- Set to commute mode (immediate spawn, no delays)
     rat:SetSpawnLimit(1)
-    rat:SetSpawnDelay(1)
+    rat:SetSpawnDelay(0) -- zero delay for immediate spawn
     
     -- CRITICAL: Force takeoff from runway to prevent aircraft getting stuck at parking
     -- SetTakeoffRunway() ensures aircraft spawn directly on runway and take off immediately
@@ -490,6 +488,62 @@ local function dispatchCargo(squadron, coalitionKey)
         end
 
         log("RAT spawned cargo aircraft group: " .. tostring(spawnedGroup:GetName()))
+        
+        -- CRITICAL FIX: Force group to start/activate immediately after spawn
+        -- This addresses the MOOSE IsAlive=false issue where RAT spawns groups in inactive state
+        timer.scheduleFunction(function()
+            local ok, err = pcall(function()
+                local dcs = spawnedGroup:GetDCSObject()
+                if dcs then
+                    local controller = dcs:getController()
+                    if controller then
+                        -- Force the group to start moving by issuing a simple command
+                        -- This "wakes up" the AI controller and makes MOOSE recognize it as alive
+                        controller:setOption(AI.Option.Air.id.REACTION_ON_THREAT, AI.Option.Air.val.REACTION_ON_THREAT.ALLOW_ABORT_MISSION)
+                        log("[SPAWN FIX] Activated controller for group: " .. tostring(spawnedGroup:GetName()), true)
+                        
+                        -- Alternative: try to explicitly start the group
+                        if spawnedGroup.Start then
+                            spawnedGroup:Start()
+                            log("[SPAWN FIX] Called Start() on group", true)
+                        end
+                        
+                        -- Alternative: try Activate if available
+                        if spawnedGroup.Activate then
+                            spawnedGroup:Activate()
+                            log("[SPAWN FIX] Called Activate() on group", true)
+                        end
+                    end
+                end
+            end)
+            if not ok then
+                log("[SPAWN FIX] Error activating group: " .. tostring(err), true)
+            end
+        end, {}, timer.getTime() + 0.5)
+        
+        -- IMMEDIATE spawn state verification (check within 2 seconds after activation attempt)
+        timer.scheduleFunction(function()
+            local ok, err = pcall(function()
+                log("[SPAWN VERIFY] Group: " .. tostring(spawnedGroup:GetName()) .. " - IsAlive: " .. tostring(spawnedGroup:IsAlive()), true)
+                local dcs = spawnedGroup:GetDCSObject()
+                if dcs then
+                    local controller = dcs:getController()
+                    log("[SPAWN VERIFY] Controller exists: " .. tostring(controller ~= nil), true)
+                    local units = dcs:getUnits()
+                    if units and #units > 0 then
+                        local u = units[1]
+                        local life = u:getLife()
+                        local life0 = u:getLife0()
+                        log(string.format("[SPAWN VERIFY] Unit life: %.1f / %.1f (%.1f%%)", life, life0, (life/life0)*100), true)
+                    end
+                else
+                    log("[SPAWN VERIFY] ERROR: No DCS group object immediately after spawn!", true)
+                end
+            end)
+            if not ok then
+                log("[SPAWN VERIFY] Error checking spawn state: " .. tostring(err), true)
+            end
+        end, {}, timer.getTime() + 2)
 
         -- Temporary debug: log group state every 10s for 10 minutes to trace landing/parking behavior
         local debugChecks = 60 -- 60 * 10s = 10 minutes

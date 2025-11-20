@@ -778,11 +778,11 @@ local function processCargoDelivery(cargoGroup, squadron, coalitionSide, coaliti
         _G.processedDeliveries = {}
     end
 
-    -- Use group ID + squadron airbase as dedupe key to avoid double crediting when the same group
+    -- Use group ID + squadron airbase + coalition as dedupe key to avoid double crediting when the same group
     -- triggers multiple events or moves between airbases rapidly.
     local okId, grpId = pcall(function() return cargoGroup and cargoGroup.GetID and cargoGroup:GetID() end)
     local groupIdStr = (okId and grpId) and tostring(grpId) or "<no-id>"
-    local deliveryKey = groupIdStr .. "_" .. tostring(squadron.airbaseName)
+    local deliveryKey = coalitionKey:upper() .. "_" .. groupIdStr .. "_" .. tostring(squadron.airbaseName)
 
     -- Diagnostic log: show group name, id, and delivery key when processor invoked
     local okName, grpName = pcall(function() return cargoGroup and cargoGroup.GetName and cargoGroup:GetName() end)
