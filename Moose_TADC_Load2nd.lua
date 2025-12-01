@@ -1,3 +1,4 @@
+---@diagnostic disable: undefined-field
 --[[
 ═══════════════════════════════════════════════════════════════════════════════
                               UNIVERSAL TADC
@@ -124,6 +125,8 @@ AUTHOR:
 VERSION: 1.0
 ═══════════════════════════════════════════════════════════════════════════════
 ]]
+---@diagnostic disable: undefined-global, lowercase-global
+-- MOOSE framework globals are defined at runtime by DCS World
 
 --[[
 ═══════════════════════════════════════════════════════════════════════════════
@@ -906,7 +909,7 @@ function cargoEventHandler:onEvent(event)
                             end
                         end
 
-                        if closestAirbase then
+                        if closestAirbase and closestSquadron then
                             local abCoalition = closestAirbase:GetCoalition()
                             local coalitionKey = (abCoalition == coalition.side.RED) and "red" or "blue"
                             if closestDistance < ADVANCED_SETTINGS.cargoLandingEventRadius then
@@ -1009,7 +1012,7 @@ function cargoEventHandler:onEvent(event)
                             end
                         end
 
-                        if closestAirbase then
+                        if closestAirbase and closestSquadron then
                             local abCoalition = closestAirbase:GetCoalition()
                             local coalitionKey = (abCoalition == coalition.side.RED) and "red" or "blue"
                             if closestDistance < ADVANCED_SETTINGS.cargoLandingEventRadius then
@@ -1157,7 +1160,7 @@ function cargoEventHandler:onEvent(event)
                                         end
                                     end
 
-                                    if closestAirbase and closestDistance < ADVANCED_SETTINGS.cargoLandingEventRadius then
+                                    if closestAirbase and closestSquadron and closestDistance and closestDistance < ADVANCED_SETTINGS.cargoLandingEventRadius then
                                         local abCoalition = closestAirbase:GetCoalition()
                                         local coalitionKey = (abCoalition == coalition.side.RED) and "red" or "blue"
                                         log("LANDING DELIVERY (raw-fallback): " .. rawNameUp .. " landed and delivered at " .. closestSquadron.airbaseName .. " (distance: " .. math.floor(closestDistance) .. "m)")
@@ -1254,7 +1257,7 @@ function cargoEventHandler:onEvent(event)
                                     end
                                 end
 
-                                if closestAirbase and closestDistance < ADVANCED_SETTINGS.cargoLandingEventRadius then
+                                if closestAirbase and closestSquadron and closestDistance and closestDistance < ADVANCED_SETTINGS.cargoLandingEventRadius then
                                     local abCoalition = closestAirbase:GetCoalition()
                                     local coalitionKey = (abCoalition == coalition.side.RED) and "red" or "blue"
 
@@ -1297,7 +1300,8 @@ function cargoEventHandler:onEvent(event)
                                         end
 
                                         if ADVANCED_SETTINGS.verboseProxyLogging then
-                                            log("LANDING DELIVERY (raw-proxy): " .. tostring(rawName) .. " landed and delivered at " .. closestSquadron.airbaseName .. " (distance: " .. math.floor(closestDistance) .. "m) - using proxy object", true)
+                                            local distanceStr = closestDistance and math.floor(closestDistance) .. "m" or "unknown"
+                                            log("LANDING DELIVERY (raw-proxy): " .. tostring(rawName) .. " landed and delivered at " .. closestSquadron.airbaseName .. " (distance: " .. distanceStr .. ") - using proxy object", true)
                                         end
                                         processCargoDelivery(cargoProxy, closestSquadron, abCoalition, coalitionKey)
                                     end
@@ -1484,7 +1488,8 @@ local function sendInterceptorHome(interceptor, coalitionSide)
         
         -- Schedule cleanup after they should have landed
         local coalitionSettings = getCoalitionSettings(coalitionSide)
-        local flightTime = math.ceil(shortestDistance / (ADVANCED_SETTINGS.rtbSpeed * 0.5144)) + coalitionSettings.rtbFlightBuffer
+        local rtbBuffer = (coalitionSettings and coalitionSettings.rtbFlightBuffer) or 300
+        local flightTime = math.ceil(shortestDistance / (ADVANCED_SETTINGS.rtbSpeed * 0.5144)) + rtbBuffer
         
         SCHEDULER:New(nil, function()
             local coalitionKey = (coalitionSide == coalition.side.RED) and "red" or "blue"
@@ -1734,11 +1739,12 @@ local function launchInterceptor(threatGroup, coalitionSide)
     end
     
     -- Calculate how many interceptors to launch using zone-modified ratio
-    local finalInterceptRatio = coalitionSettings.interceptRatio * zoneResponseRatio
+    local baseInterceptRatio = (coalitionSettings and coalitionSettings.interceptRatio) or 1.0
+    local finalInterceptRatio = baseInterceptRatio * zoneResponseRatio
     local interceptorsNeeded = math.max(1, math.ceil(threatSize * finalInterceptRatio))
     
     -- Check if we have capacity
-    if countActiveFighters(coalitionSide) + interceptorsNeeded > coalitionSettings.maxActiveCAP then
+    if coalitionSettings and countActiveFighters(coalitionSide) + interceptorsNeeded > coalitionSettings.maxActiveCAP then
         interceptorsNeeded = coalitionSettings.maxActiveCAP - countActiveFighters(coalitionSide)
         if interceptorsNeeded <= 0 then
             log(coalitionName .. " max fighters airborne, skipping launch")
@@ -1837,6 +1843,7 @@ local function launchInterceptor(threatGroup, coalitionSide)
             end
             
             -- Emergency cleanup (safety net)
+            local cleanupTime = (coalitionSettings and coalitionSettings.emergencyCleanupTime) or 7200
             SCHEDULER:New(nil, function()
                 local name = nil
                 if interceptor and interceptor.GetName then
@@ -1847,7 +1854,7 @@ local function launchInterceptor(threatGroup, coalitionSide)
                     log("Emergency cleanup of " .. coalitionName .. " " .. name .. " (should have RTB'd)")
                     destroyInterceptorGroup(interceptor, coalitionKey, 0)
                 end
-            end, {}, coalitionSettings.emergencyCleanupTime)
+            end, {}, cleanupTime)
         end
     end
     
@@ -1866,8 +1873,11 @@ local function launchInterceptor(threatGroup, coalitionSide)
         
         -- Apply cooldown immediately when squadron launches
         local currentTime = timer.getTime()
-        squadronCooldowns[coalitionKey][squadron.templateName] = currentTime + coalitionSettings.squadronCooldown
-        local cooldownMinutes = coalitionSettings.squadronCooldown / 60
+        if coalitionSettings and coalitionSettings.squadronCooldown then
+            squadronCooldowns[coalitionKey][squadron.templateName] = currentTime + coalitionSettings.squadronCooldown
+            local cooldownMinutes = coalitionSettings.squadronCooldown / 60
+            cooldownMinutes = coalitionSettings.squadronCooldown / 60
+        end
         log(coalitionName .. " Squadron " .. squadron.displayName .. " LAUNCHED! Applying " .. cooldownMinutes .. " minute cooldown")
     end
 end
@@ -1891,7 +1901,8 @@ local function detectThreatsForCoalition(coalitionSide)
     local enemyAircraft = cachedSets[cacheKey]
     local threatCount = 0
     
-    enemyAircraft:ForEach(function(enemyGroup)
+    if enemyAircraft then
+        enemyAircraft:ForEach(function(enemyGroup)
         if enemyGroup and enemyGroup:IsAlive() then
             threatCount = threatCount + 1
             currentThreats[enemyGroup:GetName()] = true
@@ -1931,6 +1942,7 @@ local function detectThreatsForCoalition(coalitionSide)
     
     log(coalitionName .. " scan complete: " .. threatCount .. " threats, " .. countActiveFighters(coalitionSide) .. " active fighters, " .. 
         assignedCount .. " assigned")
+    end
 end
 
 -- Main threat detection loop - calls both coalitions

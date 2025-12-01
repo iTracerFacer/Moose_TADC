@@ -76,7 +76,9 @@ RED_SQUADRON_CONFIG = {
         }
     },
     ]]
-    
+---@diagnostic disable: undefined-global, lowercase-global
+-- MOOSE framework globals are defined at runtime by DCS World
+
     -- ADD YOUR RED SQUADRONS HERE
     {
         templateName = "Sukhumi CAP",            -- Change to your RED template name

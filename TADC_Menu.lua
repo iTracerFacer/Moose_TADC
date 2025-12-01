@@ -6,6 +6,8 @@
 -- for either coalition, with options for cold/hot/runway start.
 -- Includes cleanup and status commands.
 -- ================================================================
+---@diagnostic disable: undefined-global, lowercase-global
+-- MOOSE framework globals are defined at runtime by DCS World
 
 -- List of available airbases (Caucasus map, add/remove as needed)
 local AIRBASES = {
