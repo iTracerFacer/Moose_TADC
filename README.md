@@ -7,7 +7,7 @@
 
 An automated air defense system for DCS World missions that creates realistic, dynamic fighter aircraft responses to airborne threats. Features dual-coalition support, zone-based defense, squadron resource management, and automated cargo replenishment for sustained operations (optional system). Player C130 landings at an airbase will replenish AI squadron resources.
 
-This system is broken up in to several lua files to make future upgrades easier on the mission maker. Keeping the squadron configs in a seperate file allows you to simply drop the  main updated logic script into your mission as I apply updates in the future. Making upgrades super easy. The Cargo Dispatch system is optional if you do not want automated cargo flights to resupply the squadrons. The TADC looks for cargo landings. You can have player provide these, or use the Cargo Dispatch system to supply the airbaes. OR - no resupply for limited resource configurations.
+This system is broken up in to several lua files to make future upgrades easier on the mission maker. Keeping the squadron configs in a seperate file allows you to simply drop the main updated logic script into your mission as I apply updates in the future. Making upgrades super easy. The Cargo Dispatch system is optional if you do not want automated cargo flights to resupply the squadrons. The TADC looks for cargo landings. You can have player provide these, or use the Cargo Dispatch system to supply the airbaes. OR - no resupply for limited resource configurations. Very flexible and up to you.
 
 ## 🎯 Key Features
 
