@@ -5,7 +5,7 @@
 [![MOOSE Compatible](https://img.shields.io/badge/MOOSE-Compatible-green)](https://github.com/FlightControl-Master/MOOSE)
 [![DCS World](https://img.shields.io/badge/DCS-World-blue)](https://www.digitalcombatsimulator.com/)
 
-An automated air defense system for DCS World missions that creates realistic, dynamic fighter aircraft responses to airborne threats. Features dual-coalition support, zone-based defense, squadron resource management, and automated cargo replenishment for sustained operations (optional system).
+An automated air defense system for DCS World missions that creates realistic, dynamic fighter aircraft responses to airborne threats. Features dual-coalition support, zone-based defense, squadron resource management, and automated cargo replenishment for sustained operations (optional system). Player C130 landings at an airbase will replenish AI squadron resources. 
 
 ## 🎯 Key Features
 
