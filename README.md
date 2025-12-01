@@ -383,5 +383,6 @@ Contributions welcome! Please:
 
 **Author**: F99th-TracerFacer  
 **Version**: 1.0  
+**Discord:** https://discord.gg/NdZ2JuSU (The Fighting 99th Discord Server where I spend most of my time.)
 **Compatible with**: DCS World + MOOSE Framework</content>
 <parameter name="filePath">README.md
