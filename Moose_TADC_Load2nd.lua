@@ -293,6 +293,28 @@ local function cleanupInterceptorEntry(interceptorName, coalitionKey)
     if aircraftSpawnTracking[coalitionKey] then
         aircraftSpawnTracking[coalitionKey][interceptorName] = nil
     end
+    -- Also clean from assignedThreats to prevent dangling references
+    if assignedThreats[coalitionKey] then
+        for threatName, interceptors in pairs(assignedThreats[coalitionKey]) do
+            if type(interceptors) == 'table' then
+                for i, interceptor in ipairs(interceptors) do
+                    local name = nil
+                    if interceptor and interceptor.GetName then
+                        local ok, value = pcall(function() return interceptor:GetName() end)
+                        if ok and value == interceptorName then
+                            table.remove(interceptors, i)
+                            break
+                        end
+                    end
+                end
+                if #interceptors == 0 then
+                    assignedThreats[coalitionKey][threatName] = nil
+                end
+            end
+        end
+    end
+    -- Incremental GC after cleanup
+    collectgarbage('step', 10)
 end
 
 local function destroyInterceptorGroup(interceptor, coalitionKey, delaySeconds)
@@ -2136,7 +2158,7 @@ end
 local function cleanupOldDeliveries()
     if _G.processedDeliveries then
         local currentTime = timer.getTime()
-        local cleanupAge = 3600 -- Remove delivery records older than 1 hour
+        local cleanupAge = 1800 -- Remove delivery records older than 30 minutes (reduced from 1 hour)
         local removedCount = 0
         
         for deliveryKey, timestamp in pairs(_G.processedDeliveries) do
@@ -2149,6 +2171,9 @@ local function cleanupOldDeliveries()
         if removedCount > 0 then
             log("Cleaned up " .. removedCount .. " old cargo delivery records", true)
         end
+        
+        -- Incremental GC after cleanup
+        collectgarbage('step', 50)
     end
 end
 
@@ -2341,14 +2366,91 @@ local function initializeSystem()
         TADC_CARGO_LANDING_HANDLER:HandleEvent(EVENTS.Land)
     end
     
-    SCHEDULER:New(nil, detectThreats, {}, 5, TADC_SETTINGS.checkInterval)
-    SCHEDULER:New(nil, monitorInterceptors, {}, 10, TADC_SETTINGS.monitorInterval)
-    SCHEDULER:New(nil, checkAirbaseStatus, {}, 30, TADC_SETTINGS.statusReportInterval)
-    SCHEDULER:New(nil, updateSquadronStates, {}, 60, 30) -- Update squadron states every 30 seconds (60 sec initial delay to allow DCS airbase coalition to stabilize)
-    SCHEDULER:New(nil, cleanupOldDeliveries, {}, 60, 3600) -- Cleanup old delivery records every hour
+    -- Start threat detection with incremental GC to prevent event data accumulation
+    SCHEDULER:New(nil, function()
+        detectThreats()
+        collectgarbage('step', 50) -- Small GC step every threat check
+    end, {}, 5, TADC_SETTINGS.checkInterval)
+    
+    -- Monitor interceptors with GC
+    SCHEDULER:New(nil, function()
+        monitorInterceptors()
+        collectgarbage('step', 50)
+    end, {}, 10, TADC_SETTINGS.monitorInterval)
+    
+    -- Check airbase status with GC
+    SCHEDULER:New(nil, function()
+        checkAirbaseStatus()
+        collectgarbage('step', 30)
+    end, {}, 30, TADC_SETTINGS.statusReportInterval)
+    -- Update squadron states with GC
+    SCHEDULER:New(nil, function()
+        updateSquadronStates()
+        collectgarbage('step', 30)
+    end, {}, 60, 30) -- Update squadron states every 30 seconds (60 sec initial delay to allow DCS airbase coalition to stabilize)
+    
+    -- Cleanup old deliveries more frequently with GC (every 10 minutes instead of 1 hour)
+    SCHEDULER:New(nil, function()
+        cleanupOldDeliveries()
+        collectgarbage('step', 100) -- Larger step after cleanup
+    end, {}, 60, 600) -- Run every 10 minutes
+    
+    -- Add aggressive periodic cleanup of tracking tables to prevent memory leaks
+    SCHEDULER:New(nil, function()
+        local cleaned = 0
+        
+        -- Clean dead entries from activeInterceptors
+        for _, coalitionKey in ipairs({'red', 'blue'}) do
+            for name, data in pairs(activeInterceptors[coalitionKey]) do
+                if not data or not data.group or not data.group:IsAlive() then
+                    activeInterceptors[coalitionKey][name] = nil
+                    cleaned = cleaned + 1
+                end
+            end
+            
+            -- Clean dead entries from assignedThreats
+            for threatName, interceptors in pairs(assignedThreats[coalitionKey]) do
+                if type(interceptors) == 'table' then
+                    local allDead = true
+                    for _, interceptor in pairs(interceptors) do
+                        if interceptor and interceptor:IsAlive() then
+                            allDead = false
+                            break
+                        end
+                    end
+                    if allDead then
+                        assignedThreats[coalitionKey][threatName] = nil
+                        cleaned = cleaned + 1
+                    end
+                elseif not interceptors or not interceptors:IsAlive() then
+                    assignedThreats[coalitionKey][threatName] = nil
+                    cleaned = cleaned + 1
+                end
+            end
+            
+            -- Clean stale entries from aircraftSpawnTracking (older than 30 minutes)
+            local currentTime = timer.getTime()
+            for aircraftName, trackingData in pairs(aircraftSpawnTracking[coalitionKey]) do
+                if not trackingData or (currentTime - trackingData.spawnTime > 1800) then
+                    aircraftSpawnTracking[coalitionKey][aircraftName] = nil
+                    cleaned = cleaned + 1
+                end
+            end
+        end
+        
+        if cleaned > 0 then
+            log('Periodic cleanup: Removed ' .. cleaned .. ' stale tracking entries', true)
+        end
+        
+        -- Force full GC after cleanup
+        collectgarbage('collect')
+    end, {}, 300, 600) -- Run every 10 minutes starting after 5 minutes
 
-    -- Start periodic squadron summary broadcast
-    SCHEDULER:New(nil, broadcastSquadronSummary, {}, 10, TADC_SETTINGS.squadronSummaryInterval)
+    -- Start periodic squadron summary broadcast with GC
+    SCHEDULER:New(nil, function()
+        broadcastSquadronSummary()
+        collectgarbage('step', 30)
+    end, {}, 10, TADC_SETTINGS.squadronSummaryInterval)
     
     log("Universal Dual-Coalition TADC operational!")
     log("RED Replenishment: " .. TADC_SETTINGS.red.cargoReplenishmentAmount .. " aircraft per cargo delivery")
@@ -2622,8 +2724,11 @@ for _, coalitionKey in ipairs({"red", "blue"}) do
     end
 end
 
--- Set up periodic stuck aircraft monitoring (every 2 minutes)
-SCHEDULER:New(nil, monitorStuckAircraft, {}, 120, 120)
+-- Set up periodic stuck aircraft monitoring (every 2 minutes) with GC
+SCHEDULER:New(nil, function()
+    monitorStuckAircraft()
+    collectgarbage('step', 50)
+end, {}, 120, 120)
 
 
 

@@ -42,6 +42,10 @@ local spawnedGroups = {}
 local function TrackGroup(group)
     if group and group:IsAlive() then
         table.insert(spawnedGroups, group)
+        -- Prevent unlimited growth - limit tracking to 200 groups
+        if #spawnedGroups > 200 then
+            table.remove(spawnedGroups, 1) -- Remove oldest
+        end
     end
 end
 
@@ -56,15 +60,42 @@ local function CleanupAll()
     end
     spawnedGroups = {}
     MESSAGE:New("Cleaned up " .. cleaned .. " spawned groups", 10):ToAll()
+    collectgarbage('collect') -- Full GC after cleanup
+end
+
+-- Utility: Cleanup dead groups from tracking (periodic maintenance)
+local function CleanupDeadGroups()
+    local cleaned = 0
+    for i = #spawnedGroups, 1, -1 do
+        local group = spawnedGroups[i]
+        if not group or not group:IsAlive() then
+            table.remove(spawnedGroups, i)
+            cleaned = cleaned + 1
+        end
+    end
+    if cleaned > 0 then
+        env.info("[TADC Menu] Auto-cleaned " .. cleaned .. " dead groups from tracking")
+        collectgarbage('step', 50)
+    end
 end
 
 -- Utility: Show status of spawned groups
 local function ShowStatus()
+    -- Clean dead groups before showing status
+    CleanupDeadGroups()
     local alive = 0
     for _, group in ipairs(spawnedGroups) do
         if group and group:IsAlive() then alive = alive + 1 end
     end
     MESSAGE:New("Spawner Status:\nAlive groups: " .. alive .. "\nTotal spawned: " .. #spawnedGroups, 15):ToAll()
+end
+
+-- Set up periodic cleanup of dead groups every 5 minutes
+if SCHEDULER then
+    SCHEDULER:New(nil, function()
+        CleanupDeadGroups()
+        collectgarbage('step', 50)
+    end, {}, 300, 300) -- Every 5 minutes
 end
 
 -- Main menu

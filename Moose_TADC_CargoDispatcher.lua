@@ -522,6 +522,7 @@ local function dispatchCargo(squadron, coalitionKey)
             if not ok then
                 log("[SPAWN FIX] Error activating group: " .. tostring(err), true)
             end
+            collectgarbage('step', 10) -- GC after timer callback
         end, {}, timer.getTime() + 0.5)
         
         -- IMMEDIATE spawn state verification (check within 2 seconds after activation attempt)
@@ -546,13 +547,17 @@ local function dispatchCargo(squadron, coalitionKey)
             if not ok then
                 log("[SPAWN VERIFY] Error checking spawn state: " .. tostring(err), true)
             end
+            collectgarbage('step', 10) -- GC after verification
         end, {}, timer.getTime() + 2)
 
-        -- Temporary debug: log group state every 10s for 10 minutes to trace landing/parking behavior
-        local debugChecks = 60 -- 60 * 10s = 10 minutes
+        -- Temporary debug: log group state every 10s for 5 minutes to trace landing/parking behavior
+        local debugChecks = 30 -- 30 * 10s = 5 minutes (reduced from 10 minutes to limit memory impact)
         local checkInterval = 10
         local function debugLogState(iter)
-            if iter > debugChecks then return end
+            if iter > debugChecks then 
+                collectgarbage('step', 20) -- Final cleanup after debug sequence
+                return 
+            end
             local ok, err = pcall(function()
                 local name = spawnedGroup:GetName()
                 local dcs = spawnedGroup:GetDCSObject()
@@ -583,6 +588,10 @@ local function dispatchCargo(squadron, coalitionKey)
             end)
             if not ok then
                 log("[TDAC DEBUG] Error during debugLogState: " .. tostring(err), true)
+            end
+            -- Add GC step every 5 iterations
+            if iter % 5 == 0 then
+                collectgarbage('step', 10)
             end
             timer.scheduleFunction(function() debugLogState(iter + 1) end, {}, timer.getTime() + checkInterval)
         end
@@ -739,8 +748,32 @@ end
 local function cargoDispatcherMain()
     log("═══════════════════════════════════════════════════════════════════════════════", true)
     log("Cargo Dispatcher main loop running.", true)
+    
+    -- Clean up completed/failed missions before processing
+    local cleaned = 0
+    for _, coalitionKey in ipairs({"red", "blue"}) do
+        for idx = #cargoMissions[coalitionKey], 1, -1 do
+            local mission = cargoMissions[coalitionKey][idx]
+            if mission.status == "completed" or mission.status == "failed" then
+                -- Remove missions completed/failed more than 5 minutes ago
+                local age = timer.getTime() - (mission.completedAt or mission._pendingStartTime or 0)
+                if age > 300 then
+                    table.remove(cargoMissions[coalitionKey], idx)
+                    cleaned = cleaned + 1
+                end
+            end
+        end
+    end
+    if cleaned > 0 then
+        log("Cleaned up " .. cleaned .. " old cargo missions from tracking", true)
+    end
+    
     monitorSquadrons()
     monitorCargoMissions()
+    
+    -- Incremental GC after each loop iteration
+    collectgarbage('step', 100)
+    
     -- Schedule the next run inside a protected call to avoid unhandled errors
     timer.scheduleFunction(function()
         local ok, err = pcall(cargoDispatcherMain)
