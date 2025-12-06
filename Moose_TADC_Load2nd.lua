@@ -1815,18 +1815,14 @@ local function launchInterceptor(threatGroup, coalitionSide)
                     -- Route to threat
                     local currentThreatCoord = safeCoordinate(threatGroup)
                     if currentThreatCoord then
-                        local okIntercept, interceptCoord = pcall(function()
-                            return currentThreatCoord:SetAltitude(squadron.altitude * 0.3048)
+                        local interceptCoord = currentThreatCoord  -- Use threat's current altitude for intercept
+                        pcall(function()
+                            interceptor:RouteAirTo(interceptCoord, squadron.speed * 0.5144, "BARO")
                         end)
-                        if okIntercept and interceptCoord then
-                            pcall(function()
-                                interceptor:RouteAirTo(interceptCoord, squadron.speed * 0.5144, "BARO")
-                            end)
-                        end
                         
-                        -- Attack the threat
-                        local attackTask = {
-                            id = 'AttackGroup',
+                        -- Engage the threat
+                        local engageTask = {
+                            id = 'EngageGroup',
                             params = {
                                 groupId = threatGroup:GetID(),
                                 weaponType = 'Auto',
@@ -1834,7 +1830,7 @@ local function launchInterceptor(threatGroup, coalitionSide)
                                 priority = 1
                             }
                         }
-                        interceptor:PushTask(attackTask, 1)
+                        interceptor:PushTask(engageTask, 1)
                     end
                 end
             end, {}, 3)
