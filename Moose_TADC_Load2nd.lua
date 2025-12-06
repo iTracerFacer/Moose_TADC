@@ -1895,9 +1895,9 @@ local function launchInterceptor(threatGroup, coalitionSide)
         
         -- Apply cooldown immediately when squadron launches
         local currentTime = timer.getTime()
+        local cooldownMinutes = 0
         if coalitionSettings and coalitionSettings.squadronCooldown then
             squadronCooldowns[coalitionKey][squadron.templateName] = currentTime + coalitionSettings.squadronCooldown
-            local cooldownMinutes = coalitionSettings.squadronCooldown / 60
             cooldownMinutes = coalitionSettings.squadronCooldown / 60
         end
         log(coalitionName .. " Squadron " .. squadron.displayName .. " LAUNCHED! Applying " .. cooldownMinutes .. " minute cooldown")

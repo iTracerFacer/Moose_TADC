@@ -15,20 +15,35 @@ CONFIGURATION:
 
 REQUIRES:
     - MOOSE framework (for SPAWN, AIRBASE, etc.)
-    - Optional: MIST for deep copy of templates
 
 ═══════════════════════════════════════════════════════════════════════════════
 ]]
 ---@diagnostic disable: undefined-global, lowercase-global
 -- MOOSE framework globals are defined at runtime by DCS World
-
-
 -- Single-run guard to prevent duplicate dispatcher loops if script is reloaded
 if _G.__TDAC_DISPATCHER_RUNNING then
     env.info("[TDAC] CargoDispatcher already running; aborting duplicate load")
     return
 end
 _G.__TDAC_DISPATCHER_RUNNING = true
+
+--[[
+    CARGO SUPPLY CONFIGURATION
+    --------------------------------------------------------------------------
+    Set supply airfields, cargo template names, and resupply thresholds for each coalition.
+]]
+local CARGO_SUPPLY_CONFIG = {
+    red = {
+        supplyAirfields = { "Sochi-Adler", "Nalchik", "Beslan", "Maykop-Khanskaya" }, -- replace with your RED supply airbase names
+        cargoTemplate = "CARGO_RED_AN26",    -- replace with your RED cargo aircraft template name
+        threshold = 0.90                     -- ratio below which to trigger resupply (testing)
+    },
+    blue = {
+        supplyAirfields = { "Batumi", "Kobuleti", "Senaki-Kolkhi", "Kutaisi", "Soganlug" }, -- replace with your BLUE supply airbase names
+        cargoTemplate = "CARGO_BLUE_C130",   -- replace with your BLUE cargo aircraft template name
+        threshold = 0.90                     -- ratio below which to trigger resupply (testing)
+    }
+}
 
 --[[
     GLOBAL STATE AND CONFIGURATION
@@ -51,23 +66,7 @@ if DISPATCHER_CONFIG.ALLOW_FALLBACK_TO_INMEM_TEMPLATE == nil then
     DISPATCHER_CONFIG.ALLOW_FALLBACK_TO_INMEM_TEMPLATE = false
 end
 
---[[
-    CARGO SUPPLY CONFIGURATION
-    --------------------------------------------------------------------------
-    Set supply airfields, cargo template names, and resupply thresholds for each coalition.
-]]
-local CARGO_SUPPLY_CONFIG = {
-    red = {
-        supplyAirfields = { "Sochi-Adler", "Nalchik", "Beslan", "Maykop-Khanskaya" }, -- replace with your RED supply airbase names
-        cargoTemplate = "CARGO_RED_AN26",    -- replace with your RED cargo aircraft template name
-        threshold = 0.90                              -- ratio below which to trigger resupply (testing)
-    },
-    blue = {
-        supplyAirfields = { "Batumi", "Kobuleti", "Senaki-Kolkhi", "Kutaisi", "Soganlug" }, -- replace with your BLUE supply airbase names
-        cargoTemplate = "CARGO_BLUE_C130",   -- replace with your BLUE cargo aircraft template name
-        threshold = 0.90                              -- ratio below which to trigger resupply (testing)
-    }
-}
+
 
 
 
