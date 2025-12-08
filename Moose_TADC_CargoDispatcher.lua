@@ -15,17 +15,46 @@ CONFIGURATION:
 
 REQUIRES:
     - MOOSE framework (for SPAWN, AIRBASE, etc.)
+    - Optional: MIST for deep copy of templates
 
 ═══════════════════════════════════════════════════════════════════════════════
 ]]
 ---@diagnostic disable: undefined-global, lowercase-global
 -- MOOSE framework globals are defined at runtime by DCS World
+
+
 -- Single-run guard to prevent duplicate dispatcher loops if script is reloaded
 if _G.__TDAC_DISPATCHER_RUNNING then
     env.info("[TDAC] CargoDispatcher already running; aborting duplicate load")
     return
 end
 _G.__TDAC_DISPATCHER_RUNNING = true
+
+--[[
+    GLOBAL STATE AND CONFIGURATION
+    --------------------------------------------------------------------------
+    Tracks all active cargo missions and dispatcher configuration.
+]]
+if not cargoMissions then
+    cargoMissions = { red = {}, blue = {} }
+end
+
+-- Stuck aircraft tracking per airbase
+if not stuckCounts then
+    stuckCounts = { red = {}, blue = {} }
+end
+
+-- Dispatcher config (interval in seconds)
+if not DISPATCHER_CONFIG then
+    -- default interval (seconds) and a slightly larger grace period to account for slow servers/networks
+    DISPATCHER_CONFIG = { interval = 60, gracePeriod = 25 }
+end
+
+-- Safety flag: when false, do NOT fall back to spawning from in-memory template tables.
+-- Set to true if you understand the tweaked-template warning and accept the risk.
+if DISPATCHER_CONFIG.ALLOW_FALLBACK_TO_INMEM_TEMPLATE == nil then
+    DISPATCHER_CONFIG.ALLOW_FALLBACK_TO_INMEM_TEMPLATE = false
+end
 
 --[[
     CARGO SUPPLY CONFIGURATION
@@ -44,29 +73,6 @@ local CARGO_SUPPLY_CONFIG = {
         threshold = 0.90                     -- ratio below which to trigger resupply (testing)
     }
 }
-
---[[
-    GLOBAL STATE AND CONFIGURATION
-    --------------------------------------------------------------------------
-    Tracks all active cargo missions and dispatcher configuration.
-]]
-if not cargoMissions then
-    cargoMissions = { red = {}, blue = {} }
-end
-
--- Dispatcher config (interval in seconds)
-if not DISPATCHER_CONFIG then
-    -- default interval (seconds) and a slightly larger grace period to account for slow servers/networks
-    DISPATCHER_CONFIG = { interval = 60, gracePeriod = 25 }
-end
-
--- Safety flag: when false, do NOT fall back to spawning from in-memory template tables.
--- Set to true if you understand the tweaked-template warning and accept the risk.
-if DISPATCHER_CONFIG.ALLOW_FALLBACK_TO_INMEM_TEMPLATE == nil then
-    DISPATCHER_CONFIG.ALLOW_FALLBACK_TO_INMEM_TEMPLATE = false
-end
-
-
 
 
 
@@ -489,6 +495,9 @@ local function dispatchCargo(squadron, coalitionKey)
             end
         end
 
+        mission.spawnPos = spawnPos
+        mission.spawnTime = timer.getTime()
+
         log("RAT spawned cargo aircraft group: " .. tostring(spawnedGroup:GetName()))
         
         -- CRITICAL FIX: Force group to start/activate immediately after spawn
@@ -732,6 +741,31 @@ local function monitorCargoMissions()
                     announceToCoalition(coalitionKey, "Resupply mission to " .. mission.destination .. " failed!")
                 else
                     log("DEBUG: Mission appears to still have DCS units despite IsAlive=false; skipping failure for " .. tostring(mission.destination), true)
+                end
+            end
+
+            -- Check for stuck aircraft
+            if mission.status == "enroute" and mission.group and mission.group:IsAlive() and mission.spawnTime then
+                local timeSinceSpawn = timer.getTime() - mission.spawnTime
+                if timeSinceSpawn > 60 then  -- Check after 1 minute
+                    local dcsGroup = mission.group:GetDCSObject()
+                    if dcsGroup then
+                        local units = dcsGroup:getUnits()
+                        if units and #units > 0 then
+                            local unit = units[1]
+                            if not unit:inAir() then
+                                -- Aircraft is stuck, not airborne
+                                log("Cargo aircraft failed to take off from " .. tostring(mission.origin) .. ": " .. tostring(mission.group:GetName()))
+                                mission.group:Destroy()
+                                mission.status = "failed"
+                                stuckCounts[coalitionKey][mission.origin] = (stuckCounts[coalitionKey][mission.origin] or 0) + 1
+                                local count = stuckCounts[coalitionKey][mission.origin]
+                                if count >= 3 then
+                                    MESSAGE:New("WARNING: Airbase '" .. tostring(mission.origin) .. "' has caused " .. tostring(count) .. " cargo aircraft to fail takeoff. Mission maker: reconfigure cargo operations to avoid this airbase.", 60):ToAll()
+                                end
+                            end
+                        end
+                    end
                 end
             end
         end
