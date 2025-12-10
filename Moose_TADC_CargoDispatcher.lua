@@ -107,7 +107,7 @@ end
     Advanced logging configuration and helper function for debug output.
 ]]
 local ADVANCED_LOGGING = {
-    enableDetailedLogging = false,
+    enableDetailedLogging = true,
     logPrefix = "[TADC Cargo]"
 }
 
@@ -140,6 +140,10 @@ end
 -- Dispatch cooldown per airbase (seconds) to avoid repeated immediate retries
 local CARGO_DISPATCH_COOLDOWN = DISPATCHER_CONFIG and DISPATCHER_CONFIG.cooldown or 300 -- default 5 minutes
 local lastDispatchAttempt = { red = {}, blue = {} }
+
+-- Per-airbase spawn throttling to prevent runway congestion (minimum time between spawns at same airbase)
+local AIRBASE_SPAWN_THROTTLE = 120 -- 2 minutes between spawns at same airbase
+local lastSpawnAtAirbase = { red = {}, blue = {} }
 
 local function getCoalitionSide(coalitionKey)
     if coalitionKey == 'blue' then return coalition.side.BLUE end
@@ -335,6 +339,15 @@ local function dispatchCargo(squadron, coalitionKey)
         log("No valid origin airfield found for cargo dispatch to " .. squadron.airbaseName .. " (avoiding same origin/destination)")
         return
     end
+    
+    -- Check airbase spawn throttle to prevent runway congestion
+    lastSpawnAtAirbase[coalitionKey] = lastSpawnAtAirbase[coalitionKey] or {}
+    local lastSpawnTime = lastSpawnAtAirbase[coalitionKey][origin]
+    if lastSpawnTime and (timer.getTime() - lastSpawnTime) < AIRBASE_SPAWN_THROTTLE then
+        log("Skipping dispatch from " .. origin .. " (spawn throttle active - preventing runway congestion)", true)
+        return
+    end
+    
     local destination = squadron.airbaseName
     local cargoTemplate = config.cargoTemplate
     -- Safety: check if destination has suitable parking for larger transports. If not, warn in log.
@@ -497,8 +510,11 @@ local function dispatchCargo(squadron, coalitionKey)
 
         mission.spawnPos = spawnPos
         mission.spawnTime = timer.getTime()
+        
+        -- Track spawn time for this airbase to enforce throttling
+        lastSpawnAtAirbase[coalitionKey][origin] = timer.getTime()
 
-        log("RAT spawned cargo aircraft group: " .. tostring(spawnedGroup:GetName()))
+        log("RAT spawned cargo aircraft group: " .. tostring(spawnedGroup:GetName()) .. " from " .. origin)
         
         -- CRITICAL FIX: Force group to start/activate immediately after spawn
         -- This addresses the MOOSE IsAlive=false issue where RAT spawns groups in inactive state
@@ -558,9 +574,9 @@ local function dispatchCargo(squadron, coalitionKey)
             collectgarbage('step', 10) -- GC after verification
         end, {}, timer.getTime() + 2)
 
-        -- Temporary debug: log group state every 10s for 5 minutes to trace landing/parking behavior
-        local debugChecks = 30 -- 30 * 10s = 5 minutes (reduced from 10 minutes to limit memory impact)
-        local checkInterval = 10
+        -- Debug logging: log group state every 20s for 12 minutes (600s takeoff window + 2 min buffer) to trace taxi/takeoff/landing behavior
+        local debugChecks = 36 -- 36 * 20s = 12 minutes
+        local checkInterval = 20
         local function debugLogState(iter)
             if iter > debugChecks then 
                 collectgarbage('step', 20) -- Final cleanup after debug sequence
@@ -744,25 +760,29 @@ local function monitorCargoMissions()
                 end
             end
 
-            -- Check for stuck aircraft
+            -- Check for stuck aircraft (increased to 10 minutes to allow for long taxi distances)
             if mission.status == "enroute" and mission.group and mission.group:IsAlive() and mission.spawnTime then
                 local timeSinceSpawn = timer.getTime() - mission.spawnTime
-                if timeSinceSpawn > 60 then  -- Check after 1 minute
+                if timeSinceSpawn > 600 then  -- Check after 10 minutes
                     local dcsGroup = mission.group:GetDCSObject()
                     if dcsGroup then
                         local units = dcsGroup:getUnits()
                         if units and #units > 0 then
                             local unit = units[1]
                             if not unit:inAir() then
-                                -- Aircraft is stuck, not airborne
-                                log("Cargo aircraft failed to take off from " .. tostring(mission.origin) .. ": " .. tostring(mission.group:GetName()))
+                                -- Aircraft is stuck, not airborne after 10 minutes
+                                local vel = (unit.getVelocity and unit:getVelocity()) or {x=0,y=0,z=0}
+                                local speed = math.sqrt((vel.x or 0)^2 + (vel.y or 0)^2 + (vel.z or 0)^2)
+                                log("Cargo aircraft failed to take off from " .. tostring(mission.origin) .. " after 10 minutes: " .. tostring(mission.group:GetName()) .. " (speed: " .. string.format("%.1f", speed) .. " m/s)")
                                 mission.group:Destroy()
                                 mission.status = "failed"
                                 stuckCounts[coalitionKey][mission.origin] = (stuckCounts[coalitionKey][mission.origin] or 0) + 1
                                 local count = stuckCounts[coalitionKey][mission.origin]
                                 if count >= 3 then
-                                    MESSAGE:New("WARNING: Airbase '" .. tostring(mission.origin) .. "' has caused " .. tostring(count) .. " cargo aircraft to fail takeoff. Mission maker: reconfigure cargo operations to avoid this airbase.", 60):ToAll()
+                                    MESSAGE:New("WARNING: Airbase '" .. tostring(mission.origin) .. "' has caused " .. tostring(count) .. " cargo aircraft to fail takeoff after 10 minutes. Mission maker: reconfigure cargo operations to avoid this airbase or check for parking/runway issues.", 60):ToAll()
                                 end
+                            else
+                                log("Cargo aircraft from " .. tostring(mission.origin) .. " successfully airborne: " .. tostring(mission.group:GetName()), true)
                             end
                         end
                     end
