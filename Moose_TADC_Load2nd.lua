@@ -1385,8 +1385,8 @@ end
 -- Monitor for stuck aircraft at airbases
 local function monitorStuckAircraft()
     local currentTime = timer.getTime()
-    local stuckThreshold = 300 -- 5 minutes before considering aircraft stuck
-    local movementThreshold = 50 -- meters - aircraft must move at least this far to not be considered stuck
+    local stuckThreshold = 900 -- 15 minutes before considering aircraft stuck (increased from 300)
+    local movementThreshold = 500 -- meters - aircraft must move at least this far to not be considered stuck (increased from 50)
     
     for _, coalitionKey in ipairs({"red", "blue"}) do
         local coalitionName = (coalitionKey == "red") and "RED" or "BLUE"
@@ -1860,7 +1860,7 @@ local function launchInterceptor(threatGroup, coalitionSide)
                 log("Tracking spawn position for " .. interceptorName .. " at " .. squadron.airbaseName, true)
             end
             
-            -- Emergency cleanup (safety net)
+            -- Emergency cleanup (safety net) - only cleanup if aircraft is no longer engaged
             local cleanupTime = (coalitionSettings and coalitionSettings.emergencyCleanupTime) or 7200
             SCHEDULER:New(nil, function()
                 local name = nil
@@ -1869,8 +1869,33 @@ local function launchInterceptor(threatGroup, coalitionSide)
                     if ok then name = value end
                 end
                 if name and activeInterceptors[coalitionKey][name] then
-                    log("Emergency cleanup of " .. coalitionName .. " " .. name .. " (should have RTB'd)")
-                    destroyInterceptorGroup(interceptor, coalitionKey, 0)
+                    -- Check if aircraft is still assigned to any threats (still in combat)
+                    local stillEngaged = false
+                    if assignedThreats[coalitionKey] then
+                        for threatName, interceptors in pairs(assignedThreats[coalitionKey]) do
+                            if type(interceptors) == 'table' then
+                                for _, assignedInterceptor in ipairs(interceptors) do
+                                    local assignedName = nil
+                                    if assignedInterceptor and assignedInterceptor.GetName then
+                                        local ok, value = pcall(function() return assignedInterceptor:GetName() end)
+                                        if ok and value == name then
+                                            stillEngaged = true
+                                            break
+                                        end
+                                    end
+                                end
+                            end
+                            if stillEngaged then break end
+                        end
+                    end
+                    
+                    -- Only cleanup if not engaged and still exists
+                    if not stillEngaged then
+                        log("Emergency cleanup of " .. coalitionName .. " " .. name .. " (completed mission or timeout)")
+                        destroyInterceptorGroup(interceptor, coalitionKey, 0)
+                    else
+                        log("Skipping emergency cleanup of " .. coalitionName .. " " .. name .. " (still engaged in combat)", true)
+                    end
                 end
             end, {}, cleanupTime)
         end
